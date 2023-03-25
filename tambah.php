@@ -3,26 +3,47 @@ error_reporting(E_ALL);
 include_once 'koneksi.php';
 
 if (isset($_POST['submit'])) {
+
   $nama = $_POST['nama'];
   $kategori = $_POST['kategori'];
   $harga_jual = $_POST['harga_jual'];
   $harga_beli = $_POST['harga_beli'];
   $stok = $_POST['stok'];
-  $file_gambar = $_FILES['file_gambar'];
-  $gambar = null;
-  if ($file_gambar['error'] == 0) {
-    $filename = str_replace(' ', '_', $file_gambar['name']);
-    $destination = dirname(__FILE__) . '/gambar/' . $filename;
-    if (move_uploaded_file($file_gambar['tmp_name'], $destination)) {
-      $gambar = 'gambar/' . $filename;;
+  $file_gambar = $_FILES['gambar'];
+
+  $file = $_FILES['gambar'];
+  $filename = $file['name'];
+  $filetmp = $file['tmp_name'];
+  $filetype = $file['type'];
+  $filesize = $file['size'];
+  $fileerror = $file['error'];
+
+  $allowed_types = array('image/jpeg', 'image/png', 'image/gif');
+  if (in_array($filetype, $allowed_types)) {
+
+    if ($filesize <= 2000000) {
+      $new_filename = uniqid('', true) . '.' . pathinfo($filename, PATHINFO_EXTENSION);
+      $destination = 'gambar/' . $new_filename;
+      // Move uploaded file to destination folder
+      if (move_uploaded_file($filetmp, $destination)) {
+        // Insert data into database
+        $sql = "INSERT INTO data_barang (kategori, nama, gambar, harga_beli, harga_jual, stok) 
+                VALUES ('{$kategori}', '{$nama}', '{$destination}', '{$harga_beli}', '{$harga_jual}', '{$stok}')";
+
+        if (mysqli_query($conn, $sql)) {
+          header('location: index.php');
+        } else {
+          echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+        }
+      } else {
+        echo 'Error uploading file.';
+      }
+    } else {
+      echo 'File size exceeds limit.';
     }
+  } else {
+    echo 'File type not allowed.';
   }
-  $sql = 'INSERT INTO data_barang (nama, kategori,harga_jual, harga_beli,
-stok, gambar) ';
-  $sql .= "VALUE ('{$nama}', '{$kategori}','{$harga_jual}',
-'{$harga_beli}', '{$stok}', '{$gambar}')";
-  $result = mysqli_query($conn, $sql);
-  header('location: index.php');
 }
 ?>
 <!DOCTYPE html>
@@ -104,8 +125,7 @@ stok, gambar) ';
     <h1>Tambah Barang</h1>
     <div class="main">
 
-      <form method="post" action="tambah.php" enctype="multipart/form-
-data">
+      <form method="post" action="tambah.php" enctype="multipart/form-data">
 
         <div class="input">
           <label>Nama Barang</label>
@@ -133,7 +153,7 @@ data">
         </div>
         <div class="input">
           <label>File Gambar</label>
-          <input type="file" name="file_gambar" />
+          <input type="file" name="gambar">
         </div>
         <div class="submit">
           <input type="submit" name="submit" value="Simpan" />
