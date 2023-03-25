@@ -103,7 +103,7 @@ $result = mysqli_query($conn, $sql);
           </tr>
           <?php endif; ?>
           </table>
-          <td><a class="button" href="ubah.php?id=<?= $row['id_barang']; ?>">Tambah Barang</a> 
+          <td><a class="button" href="tambah.php">Tambah Barang</a> 
         </div>
       </div>
     </body>
